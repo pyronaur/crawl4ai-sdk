@@ -7,7 +7,7 @@ import type { CrawlResult } from 'crawl4ai-sdk';
 
 async function main() {
   const client = new Crawl4AI({
-    baseUrl: 'https://c4.kaste.lol',
+    baseUrl: 'https://example.com',
     timeout: 60000,
   });
 

@@ -6,7 +6,7 @@ import type { Crawl4AIConfig } from './types';
 describe('Crawl4AI SDK', () => {
   let client: Crawl4AI;
   const testConfig: Crawl4AIConfig = {
-    baseUrl: 'https://c4.kaste.lol',
+    baseUrl: 'https://example.com',
     timeout: 10000,
     debug: false,
   };

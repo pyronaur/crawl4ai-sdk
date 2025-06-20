@@ -9,7 +9,7 @@ This directory contains examples demonstrating various features of the Crawl4AI 
    # Using Docker
    docker run -p 11235:11235 unclecode/crawl4ai:latest
    
-   # Or use the hosted version at https://c4.kaste.lol
+   # Or use the hosted version at https://example.com
    ```
 
 2. **Install dependencies**:
@@ -82,7 +82,7 @@ npx tsx examples/llm-extraction.ts
 
 ## Tips
 
-1. **Server URL**: Examples use `https://c4.kaste.lol` by default. Change to `http://localhost:11235` if running locally.
+1. **Server URL**: Examples use `https://example.com` by default. Change to `http://localhost:11235` if running locally.
 
 2. **Debug Mode**: Enable `debug: true` in the client configuration to see detailed request/response logs.
 

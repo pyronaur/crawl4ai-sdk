@@ -38,7 +38,7 @@ import type {
  * @example Basic usage
  * ```typescript
  * const client = new Crawl4AI({
- *   baseUrl: 'https://c4.kaste.lol',
+ *   baseUrl: 'https://example.com',
  *   apiToken: 'your_token_here'
  * });
  *
@@ -687,7 +687,7 @@ export class Crawl4AI {
  * @example
  * ```typescript
  * const client = createCrawl4AI({
- *   baseUrl: 'https://c4.kaste.lol',
+ *   baseUrl: 'https://example.com',
  *   apiToken: 'your_token'
  * });
  * ```

@@ -8,7 +8,7 @@ import type { CrawlResult } from 'crawl4ai-sdk';
 
 async function main() {
   const client = new Crawl4AI({
-    baseUrl: 'https://c4.kaste.lol',
+    baseUrl: 'https://example.com',
     timeout: 120000, // LLM extraction can take longer
   });
 

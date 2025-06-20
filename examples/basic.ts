@@ -7,7 +7,7 @@ import Crawl4AI from 'crawl4ai-sdk';
 async function main() {
   // Initialize the client
   const client = new Crawl4AI({
-    baseUrl: 'https://c4.kaste.lol', // or your local instance: http://localhost:11235
+    baseUrl: 'https://example.com', // or your local instance: http://localhost:11235
     timeout: 30000,
     debug: true, // Enable to see request/response logs
   });

@@ -47,8 +47,6 @@ yarn add crawl4ai-sdk
      unclecode/crawl4ai:latest
    ```
 
-   Or use the hosted version at `https://c4.kaste.lol`
-
 2. **TypeScript** (if using TypeScript)
    ```bash
    bun add -d typescript
@@ -63,7 +61,7 @@ import Crawl4AI from 'crawl4ai-sdk';
 
 // Initialize the client
 const client = new Crawl4AI({
-  baseUrl: 'https://c4.kaste.lol', // or your local instance
+  baseUrl: 'https://example.com', // or your local instance
   apiToken: 'your_token_here', // Optional
   timeout: 30000,
   debug: true // Enable request/response logging
@@ -91,7 +89,7 @@ console.log('Content:', result.markdown?.slice(0, 200));
 
 ```typescript
 const client = new Crawl4AI({
-  baseUrl: 'https://c4.kaste.lol',
+  baseUrl: 'https://example.com',
   apiToken: 'optional_api_token',
   timeout: 60000,          // Request timeout in ms
   retries: 3,              // Number of retry attempts
