@@ -1,0 +1,68 @@
+{
+  "name": "crawl4ai-sdk",
+  "version": "2.0.0",
+  "description": "TypeScript SDK for Crawl4AI REST API - Bun & Node.js compatible",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "test": "bun test",
+    "lint": "biome check src --assist-enabled=true",
+    "fix": "biome check --write src --assist-enabled=true",
+    "format": "biome format --write src",
+    "prepare": "bun run build && bun run build:types",
+    "prepublishOnly": "bun run lint && bun run test && bun run build"
+  },
+  "keywords": [
+    "crawl4ai",
+    "web-scraping",
+    "web-crawler",
+    "typescript",
+    "bun",
+    "nodejs",
+    "api-client",
+    "llm",
+    "ai",
+    "data-extraction",
+    "web-automation"
+  ],
+  "author": "pyronaur",
+  "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "@types/bun": "latest",
+    "@biomejs/biome": "latest"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.5.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unclecode/crawl4ai-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unclecode/crawl4ai-sdk/issues"
+  },
+  "homepage": "https://github.com/unclecode/crawl4ai-sdk#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
