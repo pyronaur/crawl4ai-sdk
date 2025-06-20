@@ -14,7 +14,6 @@ import {
 import type {
   AskRequest,
   AskResponse,
-  ConfigDumpRequest,
   Crawl4AIConfig,
   CrawlRequest,
   CrawlResult,
@@ -22,11 +21,7 @@ import type {
   HealthResponse,
   HtmlRequest,
   MarkdownRequest,
-  PdfRequest,
   RequestConfig,
-  ScreenshotRequest,
-  TokenRequest,
-  TokenResponse,
 } from './types';
 
 /**
@@ -286,118 +281,27 @@ export class Crawl4AI {
       urls: urls,
     };
 
-    return this.requestWithRetry<CrawlResult[]>('/crawl', {
+    interface CrawlApiResponse {
+      results?: CrawlResult[];
+      result?: CrawlResult[];
+    }
+
+    const response = await this.requestWithRetry<CrawlResult[] | CrawlApiResponse>('/crawl', {
       method: 'POST',
       body: JSON.stringify(normalizedRequest),
       ...config,
     });
-  }
 
-  /**
-   * Stream crawl results using Server-Sent Events for real-time updates
-   *
-   * @param request - Crawl configuration including URLs and options
-   * @param config - Optional request configuration
-   * @returns Async generator yielding crawl results as they complete
-   *
-   * @example
-   * ```typescript
-   * for await (const result of client.crawlStream({ urls: ['url1', 'url2'] })) {
-   *   console.log(`Completed: ${result.url}`);
-   * }
-   * ```
-   *
-   * @throws {RequestValidationError} If URLs are invalid
-   * @throws {Crawl4AIError} If streaming fails
-   */
-  public async *crawlStream(
-    request: CrawlRequest,
-    config?: RequestConfig,
-  ): AsyncGenerator<CrawlResult, void, unknown> {
-    // Validate URLs
-    const urls = Array.isArray(request.urls) ? request.urls : [request.urls];
-    urls.forEach((url) => this.validateUrl(url));
-
-    // Enable streaming in crawler config and ensure urls is always an array
-    const streamRequest = {
-      ...request,
-      urls: urls,
-      crawler_config: {
-        ...request.crawler_config,
-        stream: true,
-      },
-    };
-
-    const response = await this.request<Response>('/crawl/stream', {
-      method: 'POST',
-      body: JSON.stringify(streamRequest),
-      ...config,
-    });
-
-    if (!response.body) {
-      throw new Crawl4AIError('No response body for streaming');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        buffer = events.pop() || '';
-
-        for (const event of events) {
-          if (!event.trim()) continue;
-
-          const lines = event.split('\n');
-          let eventType = 'message';
-          let eventData = '';
-
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.slice(6).trim();
-            } else if (line.startsWith('data:')) {
-              const data = line.slice(5).trim();
-              eventData += eventData ? `\n${data}` : data;
-            }
-          }
-
-          if (eventData) {
-            try {
-              // Parse the JSON data from the SSE event
-              const data = JSON.parse(eventData);
-
-              // Handle different event types
-              if (eventType === 'error') {
-                throw new Crawl4AIError(
-                  data.message || 'Stream error',
-                  data.status,
-                  data.statusText,
-                  data,
-                );
-              } else if (eventType === 'message' || eventType === 'result') {
-                yield data as CrawlResult;
-              }
-              // Ignore other event types like 'ping' or 'heartbeat'
-            } catch (error) {
-              if (error instanceof Crawl4AIError) {
-                throw error;
-              }
-              this.log('Failed to parse SSE event data:', eventData);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      reader.releaseLock();
-      throw error;
-    } finally {
-      reader.releaseLock();
+    // Handle different response formats
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response.results && Array.isArray(response.results)) {
+      return response.results;
+    } else if (response.result && Array.isArray(response.result)) {
+      return response.result;
+    } else {
+      // Single result wrapped in object
+      return [response as CrawlResult];
     }
   }
 
@@ -421,11 +325,17 @@ export class Crawl4AI {
    */
   public async markdown(request: MarkdownRequest, config?: RequestConfig): Promise<string> {
     this.validateUrl(request.url);
-    return this.requestWithRetry<string>('/md', {
+    interface MarkdownApiResponse {
+      markdown: string;
+    }
+
+    const response = await this.requestWithRetry<string | MarkdownApiResponse>('/md', {
       method: 'POST',
       body: JSON.stringify(request),
       ...config,
     });
+    // API returns object with markdown property
+    return typeof response === 'string' ? response : response.markdown;
   }
 
   /**
@@ -434,37 +344,17 @@ export class Crawl4AI {
    */
   public async html(request: HtmlRequest, config?: RequestConfig): Promise<string> {
     this.validateUrl(request.url);
-    return this.requestWithRetry<string>('/html', {
-      method: 'POST',
-      body: JSON.stringify(request),
-      ...config,
-    });
-  }
+    interface HtmlApiResponse {
+      html: string;
+    }
 
-  /**
-   * Capture screenshot of webpage
-   * @param request Screenshot options
-   */
-  public async screenshot(request: ScreenshotRequest, config?: RequestConfig): Promise<string> {
-    this.validateUrl(request.url);
-    return this.requestWithRetry<string>('/screenshot', {
+    const response = await this.requestWithRetry<string | HtmlApiResponse>('/html', {
       method: 'POST',
       body: JSON.stringify(request),
       ...config,
     });
-  }
-
-  /**
-   * Generate PDF from webpage
-   * @param request PDF generation options
-   */
-  public async pdf(request: PdfRequest, config?: RequestConfig): Promise<string> {
-    this.validateUrl(request.url);
-    return this.requestWithRetry<string>('/pdf', {
-      method: 'POST',
-      body: JSON.stringify(request),
-      ...config,
-    });
+    // API returns object with html property
+    return typeof response === 'string' ? response : response.html;
   }
 
   /**
@@ -498,30 +388,6 @@ export class Crawl4AI {
   }
 
   /**
-   * Get authentication token
-   * @param request Email for authentication
-   */
-  public async getToken(request: TokenRequest, config?: RequestConfig): Promise<TokenResponse> {
-    return this.requestWithRetry<TokenResponse>('/token', {
-      method: 'POST',
-      body: JSON.stringify(request),
-      ...config,
-    });
-  }
-
-  /**
-   * Dump configuration
-   * @param request Configuration dump request
-   */
-  public async configDump(request: ConfigDumpRequest, config?: RequestConfig): Promise<string> {
-    return this.requestWithRetry<string>('/config/dump', {
-      method: 'POST',
-      body: JSON.stringify(request),
-      ...config,
-    });
-  }
-
-  /**
    * Get Crawl4AI library context for AI assistants
    * @param params Query parameters
    */
@@ -542,19 +408,40 @@ export class Crawl4AI {
   }
 
   /**
-   * LLM endpoint
+   * LLM endpoint - Process a webpage with an LLM query
+   *
    * @param url URL to process
    * @param query Query string
+   * @returns Promise resolving to the LLM's answer
+   *
+   * @example
+   * ```typescript
+   * const answer = await client.llm(
+   *   'https://example.com',
+   *   'What is the main heading on this page?'
+   * );
+   * console.log(answer); // "The main heading on this page is..."
+   * ```
    */
   public async llm(url: string, query: string, config?: RequestConfig): Promise<string> {
     this.validateUrl(url);
     const encodedUrl = encodeURIComponent(url);
     const queryParams = new URLSearchParams({ q: query });
 
-    return this.requestWithRetry<string>(`/llm/${encodedUrl}?${queryParams.toString()}`, {
-      method: 'GET',
-      ...config,
-    });
+    interface LlmApiResponse {
+      answer: string;
+    }
+
+    const response = await this.requestWithRetry<string | LlmApiResponse>(
+      `/llm/${encodedUrl}?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        ...config,
+      },
+    );
+
+    // API returns object with answer property
+    return typeof response === 'string' ? response : response.answer || '';
   }
 
   /**
@@ -592,27 +479,6 @@ export class Crawl4AI {
    */
   public async getRoot(config?: RequestConfig): Promise<string> {
     return this.request<string>('/', {
-      method: 'GET',
-      ...config,
-    });
-  }
-
-  /**
-   * Get MCP Server-Sent Events
-   * @returns Response object for SSE streaming
-   */
-  public async getMcpSse(config?: RequestConfig): Promise<Response> {
-    return this.request<Response>('/mcp/sse', {
-      method: 'GET',
-      ...config,
-    });
-  }
-
-  /**
-   * Get MCP schema
-   */
-  public async getMcpSchema(config?: RequestConfig): Promise<unknown> {
-    return this.request<unknown>('/mcp/schema', {
       method: 'GET',
       ...config,
     });
