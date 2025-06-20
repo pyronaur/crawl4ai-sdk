@@ -401,10 +401,46 @@ export class Crawl4AI {
       queryParams.append('max_results', params.max_results.toString());
 
     const endpoint = `/ask${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    return this.requestWithRetry<AskResponse>(endpoint, {
+
+    interface AskApiResult {
+      text: string;
+      score: number;
+    }
+
+    interface AskApiResponse {
+      doc_results?: AskApiResult[];
+      code_results?: AskApiResult[];
+      all_results?: AskApiResult[];
+    }
+
+    const response = await this.requestWithRetry<AskApiResponse>(endpoint, {
       method: 'GET',
       ...config,
     });
+
+    // API returns doc_results, code_results, or both based on context_type
+    // Transform to expected AskResponse format
+    const context_type = params?.context_type || 'doc';
+    let context = '';
+    let results_count = 0;
+
+    if (response.doc_results) {
+      context = response.doc_results.map((r) => r.text).join('\n\n');
+      results_count = response.doc_results.length;
+    } else if (response.code_results) {
+      context = response.code_results.map((r) => r.text).join('\n\n');
+      results_count = response.code_results.length;
+    } else if (response.all_results) {
+      context = response.all_results.map((r) => r.text).join('\n\n');
+      results_count = response.all_results.length;
+    }
+
+    return {
+      context,
+      type: context_type as ContextType,
+      query: params?.query,
+      results_count,
+    };
   }
 
   /**
