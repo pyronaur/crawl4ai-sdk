@@ -280,9 +280,15 @@ export class Crawl4AI {
     const urls = Array.isArray(request.urls) ? request.urls : [request.urls];
     urls.forEach((url) => this.validateUrl(url));
 
+    // Ensure urls is always an array in the request
+    const normalizedRequest = {
+      ...request,
+      urls: urls,
+    };
+
     return this.requestWithRetry<CrawlResult[]>('/crawl', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify(normalizedRequest),
       ...config,
     });
   }
@@ -312,9 +318,10 @@ export class Crawl4AI {
     const urls = Array.isArray(request.urls) ? request.urls : [request.urls];
     urls.forEach((url) => this.validateUrl(url));
 
-    // Enable streaming in crawler config
+    // Enable streaming in crawler config and ensure urls is always an array
     const streamRequest = {
       ...request,
+      urls: urls,
       crawler_config: {
         ...request.crawler_config,
         stream: true,
