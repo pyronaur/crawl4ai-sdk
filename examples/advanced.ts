@@ -12,16 +12,17 @@ async function main() {
   });
 
   try {
-    // 1. Streaming example - crawl multiple URLs with real-time updates
-    console.log('1. Streaming crawl example:');
+    // 1. Batch crawling - crawl multiple URLs
+    console.log('1. Batch crawl example:');
     const urls = [
       'https://example.com',
       'https://example.org',
       'https://example.net',
     ];
 
-    console.log(`Crawling ${urls.length} URLs with streaming...`);
-    for await (const result of client.crawlStream({ urls })) {
+    console.log(`Crawling ${urls.length} URLs...`);
+    const results = await client.crawl({ urls });
+    for (const result of results) {
       console.log(`✓ Completed: ${result.url} - Success: ${result.success}`);
       if (!result.success && result.error_message) {
         console.log(`  Error: ${result.error_message}`);

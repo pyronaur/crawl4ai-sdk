@@ -1,15 +1,15 @@
 # Crawl4AI TypeScript SDK
 
-A comprehensive, type-safe TypeScript SDK for the Crawl4AI REST API. Built for modern JavaScript/TypeScript environments with full Bun and Node.js compatibility.
+A type-safe TypeScript SDK for the Crawl4AI REST API. Built for modern JavaScript/TypeScript environments with full Bun and Node.js compatibility.
 
 ## 🚀 Features
 
 - **Full TypeScript Support** - Complete type definitions for all API endpoints and responses
 - **Bun & Node.js Compatible** - Works seamlessly in both runtimes
-- **Modern Async/Await** - Promise-based API with async generators for streaming
+- **Modern Async/Await** - Promise-based API for all operations
 - **Comprehensive Coverage** - All Crawl4AI endpoints including specialized features
 - **Smart Error Handling** - Custom error classes with retry logic and timeouts
-- **Stream Support** - Real-time streaming results for long-running crawls
+- **Batch Processing** - Efficiently crawl multiple URLs in a single request
 - **Input Validation** - Built-in URL validation and parameter checking
 - **Debug Mode** - Optional request/response logging for development
 - **Zero Dependencies** - Uses only native fetch API
@@ -19,16 +19,24 @@ A comprehensive, type-safe TypeScript SDK for the Crawl4AI REST API. Built for m
 ### Using Bun (Recommended)
 
 ```bash
-bun add crawl4ai-sdk
+bun add crawl4ai
 ```
 
 ### Using npm/yarn
 
 ```bash
-npm install crawl4ai-sdk
+npm install crawl4ai
 # or
-yarn add crawl4ai-sdk
+yarn add crawl4ai
 ```
+
+## 📚 About Crawl4AI
+
+> ⚠️ **Unofficial Package**: This is an unofficial TypeScript SDK for the Crawl4AI REST API. This package was created for personal use to provide a type-safe way to interact with Crawl4AI's REST API.
+
+- **Official Project**: [https://github.com/unclecode/crawl4ai](https://github.com/unclecode/crawl4ai)
+- **Official Documentation**: [https://docs.crawl4ai.com/](https://docs.crawl4ai.com/)
+
 
 ## 🏗️ Prerequisites
 
@@ -57,7 +65,7 @@ yarn add crawl4ai-sdk
 ### Basic Usage
 
 ```typescript
-import Crawl4AI from 'crawl4ai-sdk';
+import Crawl4AI from 'crawl4ai';
 
 // Initialize the client
 const client = new Crawl4AI({

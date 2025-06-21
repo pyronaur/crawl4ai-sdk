@@ -56,16 +56,14 @@ src/
 ### Key Design Principles
 1. **Zero Dependencies**: Uses only native fetch API
 2. **Type Safety**: Comprehensive TypeScript types for all API endpoints
-3. **Streaming Support**: Async generators for real-time results
-4. **Smart Error Handling**: Custom error classes with retry logic
-5. **Validation**: Built-in URL and parameter validation
+3. **Smart Error Handling**: Custom error classes with retry logic
+4. **Validation**: Built-in URL and parameter validation
 
 ### Main Class Architecture
 The `Crawl4AI` class in `sdk.ts` provides:
 - Configuration management with sensible defaults
 - Request building with proper headers and auth
 - Response handling with error checking
-- Streaming support via async generators
 - Retry logic with exponential backoff
 
 ### API Methods Pattern
@@ -93,10 +91,6 @@ Each API method follows this pattern:
 - Multiple URLs: array of valid URL strings
 - Validation happens before API calls to fail fast
 
-### Streaming Implementation
-- Use async generators for `crawlStream()` and `crawlStreamRaw()`
-- Handle chunked responses and parse JSON objects from stream
-- Gracefully handle stream interruptions
 
 ### Configuration Flexibility
 - Client config can be updated after initialization
@@ -113,8 +107,8 @@ From `.cursor/rules/use-bun-instead-of-node-vite-npm-pnpm.mdc`:
 
 ## Publishing Workflow
 
-The SDK is published to npm as `crawl4ai-sdk`:
+The SDK is published to npm as `crawl4ai`:
 1. Version is managed in package.json
 2. `prepublishOnly` script ensures quality checks
-3. Published files: dist/, README.md, LICENSE, CHANGELOG.md
+3. Published files: dist/, README.md, LICENSE
 4. TypeScript declarations are included

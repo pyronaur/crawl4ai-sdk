@@ -1,5 +1,5 @@
 {
-  "name": "crawl4ai-sdk",
+  "name": "crawl4ai",
   "version": "1.0.0",
   "description": "TypeScript SDK for Crawl4AI REST API - Bun & Node.js compatible",
   "main": "dist/index.js",
@@ -33,8 +33,7 @@
   "files": [
     "dist/**/*",
     "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18.0.0"

@@ -4,6 +4,5 @@
  */
 
 export * from './errors';
-export * from './sdk';
-export { default } from './sdk';
+export { Crawl4AI, default } from './sdk';
 export * from './types';
