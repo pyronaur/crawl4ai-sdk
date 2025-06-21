@@ -41,10 +41,6 @@ interface ApiArrayResponse<T> {
 	result?: T;
 }
 
-function isApiArrayResponse<T>(value: unknown): value is ApiArrayResponse<T> {
-	return typeof value === 'object' && value !== null && ('results' in value || 'result' in value);
-}
-
 /**
  * Crawl4AI SDK Client - Main class for interacting with Crawl4AI REST API
  *
@@ -196,21 +192,27 @@ export class Crawl4AI {
 	/**
 	 * Normalize different API response formats to a consistent array
 	 */
-	private normalizeArrayResponse<T>(response: T | ApiArrayResponse<T>): T {
+	private normalizeArrayResponse<T>(
+		response: T[] | ApiArrayResponse<T[]> | Record<string, unknown>,
+	): T[] {
+		// Already an array
 		if (Array.isArray(response)) {
 			return response;
 		}
 
-		if (isApiArrayResponse<T>(response)) {
-			if (response.results && Array.isArray(response.results)) {
-				return response.results;
+		// Check for API response format with results/result property
+		if (typeof response === 'object' && response !== null) {
+			const apiResponse = response as ApiArrayResponse<T[]>;
+			if (apiResponse.results && Array.isArray(apiResponse.results)) {
+				return apiResponse.results;
 			}
-			if (response.result && Array.isArray(response.result)) {
-				return response.result;
+			if (apiResponse.result && Array.isArray(apiResponse.result)) {
+				return apiResponse.result;
 			}
 		}
 
-		return [response] as unknown as T;
+		// Single item - wrap in array
+		return [response as T];
 	}
 
 	/**
@@ -411,7 +413,7 @@ export class Crawl4AI {
 		});
 
 		// Handle different response formats using utility
-		return this.normalizeArrayResponse<CrawlResult[]>(response);
+		return this.normalizeArrayResponse<CrawlResult>(response);
 	}
 
 	/**
