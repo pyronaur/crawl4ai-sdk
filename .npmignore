@@ -1,51 +1,37 @@
-# Source files (we only ship dist)
+# Source files
 src/
 *.ts
-!*.d.ts
+!dist/**/*.d.ts
 
-# Config files
-tsconfig.json
-biome.json
-.gitignore
-.npmignore
-
-# Testing
-*.test.*
-*.spec.*
-coverage/
-.nyc_output/
-
-# Development
+# Development files
+.cursor/
+.git/
+.github/
 .vscode/
 .idea/
-*.swp
-*.swo
+*.log
+*.tmp
 
-# Examples (users can view on GitHub)
+# Test files
+*.test.ts
+*.spec.ts
+test/
+tests/
+
+# Build tools
+biome.json
+tsconfig.json
+bun.lock
+
+# Documentation
+CLAUDE.md
+API_REFERENCE.md
 examples/
 
-# Documentation source
-docs/
-
-# CI/CD
-.github/
-.gitlab-ci.yml
-.travis.yml
-
 # Misc
-*.log
 .DS_Store
-Thumbs.db
-.env*
+.env
+.env.*
+node_modules/
+coverage/
 *.tgz
-
-# Lock files (controversial, but reduces package size)
-bun.lockb
-yarn.lock
-package-lock.json
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.temp

@@ -25,6 +25,26 @@ import type {
 	RequestConfig,
 } from './types';
 
+// Constants
+const DEFAULT_TIMEOUT = 300000; // 5 minutes
+const DEFAULT_RETRIES = 3;
+const DEFAULT_RETRY_DELAY = 1000;
+const RETRY_BACKOFF_MULTIPLIER = 2;
+const HEALTH_CHECK_TIMEOUT = 5000;
+const CLIENT_ERROR_MIN = 400;
+const CLIENT_ERROR_MAX = 500;
+const RATE_LIMIT_STATUS = 429;
+
+// Type Guards
+interface ApiArrayResponse<T> {
+	results?: T;
+	result?: T;
+}
+
+function isApiArrayResponse<T>(value: unknown): value is ApiArrayResponse<T> {
+	return typeof value === 'object' && value !== null && ('results' in value || 'result' in value);
+}
+
 /**
  * Crawl4AI SDK Client - Main class for interacting with Crawl4AI REST API
  *
@@ -70,17 +90,67 @@ export class Crawl4AI {
 	 * @param config.throwOnError - Throw on HTTP errors (default: true)
 	 */
 	constructor(config: Crawl4AIConfig) {
+		// Validate required config
+		if (!config.baseUrl) {
+			throw new RequestValidationError('baseUrl is required in configuration', 'baseUrl');
+		}
+
+		// Validate baseUrl format
+		try {
+			new URL(config.baseUrl);
+		} catch {
+			throw new RequestValidationError(
+				`Invalid baseUrl: ${config.baseUrl}`,
+				'baseUrl',
+				config.baseUrl,
+			);
+		}
+
 		// Define defaults
 		const defaults = {
 			apiToken: '',
-			timeout: 300000, // 5 minutes
-			retries: 3,
-			retryDelay: 1000,
+			timeout: DEFAULT_TIMEOUT,
+			retries: DEFAULT_RETRIES,
+			retryDelay: DEFAULT_RETRY_DELAY,
 			defaultHeaders: { 'Content-Type': 'application/json' },
 			throwOnError: true,
-			validateStatus: (status: number) => status < 400,
+			validateStatus: (status: number) => status < CLIENT_ERROR_MIN,
 			debug: false,
 		};
+
+		// Validate numeric config values
+		if (
+			config.timeout !== undefined &&
+			(config.timeout <= 0 || !Number.isFinite(config.timeout))
+		) {
+			throw new RequestValidationError(
+				'timeout must be a positive number',
+				'timeout',
+				config.timeout,
+			);
+		}
+
+		if (
+			config.retries !== undefined &&
+			(config.retries < 0 || !Number.isInteger(config.retries))
+		) {
+			throw new RequestValidationError(
+				'retries must be a non-negative integer',
+				'retries',
+				config.retries,
+			);
+		}
+
+		if (
+			config.retryDelay !== undefined &&
+			(config.retryDelay < 0 || !Number.isFinite(config.retryDelay))
+		) {
+			throw new RequestValidationError(
+				'retryDelay must be a non-negative number',
+				'retryDelay',
+				config.retryDelay,
+			);
+		}
 
 		// Merge config with defaults
 		this.config = {
@@ -126,17 +196,18 @@ export class Crawl4AI {
 	/**
 	 * Normalize different API response formats to a consistent array
 	 */
-	private normalizeArrayResponse<T>(response: T | { results?: T } | { result?: T }): T {
+	private normalizeArrayResponse<T>(response: T | ApiArrayResponse<T>): T {
 		if (Array.isArray(response)) {
 			return response;
 		}
 
-		const responseObj = response as { results?: T; result?: T };
-		if ('results' in responseObj && Array.isArray(responseObj.results)) {
-			return responseObj.results;
-		}
-		if ('result' in responseObj && Array.isArray(responseObj.result)) {
-			return responseObj.result;
+		if (isApiArrayResponse<T>(response)) {
+			if (response.results && Array.isArray(response.results)) {
+				return response.results;
+			}
+			if (response.result && Array.isArray(response.result)) {
+				return response.result;
+			}
 		}
 
 		return [response] as unknown as T;
@@ -263,15 +334,15 @@ export class Crawl4AI {
 				if (
 					error instanceof Crawl4AIError &&
 					error.status &&
-					error.status >= 400 &&
-					error.status < 500 &&
-					error.status !== 429
+					error.status >= CLIENT_ERROR_MIN &&
+					error.status < CLIENT_ERROR_MAX &&
+					error.status !== RATE_LIMIT_STATUS
 				) {
 					throw error;
 				}
 
 				if (attempt < this.config.retries) {
-					let delay = this.config.retryDelay * 2 ** attempt;
+					let delay = this.config.retryDelay * RETRY_BACKOFF_MULTIPLIER ** attempt;
 
 					// Special handling for rate limit errors
 					if (error instanceof RateLimitError && error.retryAfter) {
@@ -554,6 +625,8 @@ export class Crawl4AI {
 	/**
 	 * Test connection to the Crawl4AI API server
 	 *
+	 * @param options - Optional configuration
+	 * @param options.throwOnError - Throw error instead of returning false (default: false)
 	 * @returns Promise resolving to true if connected, false otherwise
 	 *
 	 * @example
@@ -562,24 +635,49 @@ export class Crawl4AI {
 	 *   console.log('Connected to Crawl4AI');
 	 * }
 	 * ```
+	 *
+	 * @example With error details
+	 * ```typescript
+	 * try {
+	 *   await client.testConnection({ throwOnError: true });
+	 * } catch (error) {
+	 *   console.error('Connection failed:', error);
+	 * }
+	 * ```
 	 */
-	public async testConnection(): Promise<boolean> {
+	public async testConnection(options?: { throwOnError?: boolean }): Promise<boolean> {
 		try {
-			await this.health({ timeout: 5000 });
+			await this.health({ timeout: HEALTH_CHECK_TIMEOUT });
 			return true;
-		} catch {
+		} catch (error) {
+			if (options?.throwOnError) {
+				throw error;
+			}
 			return false;
 		}
 	}
 
 	/**
 	 * Get API version
+	 *
+	 * @param options - Optional configuration
+	 * @param options.throwOnError - Throw error instead of returning 'unknown' (default: false)
+	 * @returns Promise resolving to version string or 'unknown' if unavailable
+	 *
+	 * @example
+	 * ```typescript
+	 * const version = await client.version();
+	 * console.log('API version:', version);
+	 * ```
 	 */
-	public async version(): Promise<string> {
+	public async version(options?: { throwOnError?: boolean }): Promise<string> {
 		try {
 			const health = await this.health();
 			return health.version || 'unknown';
-		} catch {
+		} catch (error) {
+			if (options?.throwOnError) {
+				throw error;
+			}
 			return 'unknown';
 		}
 	}

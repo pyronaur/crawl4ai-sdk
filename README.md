@@ -127,17 +127,6 @@ const results = await client.crawl({
 });
 ```
 
-#### `crawlStream(request)` - Streaming Results
-Get real-time updates as crawl progresses:
-
-```typescript
-for await (const result of client.crawlStream({
-  urls: ['https://example.com', 'https://example.org'],
-  browser_config: { headless: true }
-})) {
-  console.log(`Completed: ${result.url} - Success: ${result.success}`);
-}
-```
 
 ### Content Generation
 
@@ -228,12 +217,16 @@ const response = await client.llm(
 ```typescript
 // Test connection
 const isConnected = await client.testConnection();
+// With error details
+const isConnected = await client.testConnection({ throwOnError: true });
 
 // Get health status
 const health = await client.health();
 
 // Get API version
 const version = await client.version();
+// With error details
+const version = await client.version({ throwOnError: true });
 
 // Get Prometheus metrics
 const metrics = await client.metrics();
