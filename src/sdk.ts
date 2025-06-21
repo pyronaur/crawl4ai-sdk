@@ -717,24 +717,6 @@ export class Crawl4AI {
 }
 
 /**
- * Factory function to create a new Crawl4AI client instance
- *
- * @param config - Client configuration options
- * @returns New Crawl4AI client instance
- *
- * @example
- * ```typescript
- * const client = createCrawl4AI({
- *   baseUrl: 'https://example.com',
- *   apiToken: 'your_token'
- * });
- * ```
- */
-export function createCrawl4AI(config: Crawl4AIConfig): Crawl4AI {
-	return new Crawl4AI(config);
-}
-
-/**
  * Default export - Crawl4AI client class
  */
 export default Crawl4AI;
