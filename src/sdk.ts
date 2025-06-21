@@ -398,12 +398,18 @@ export class Crawl4AI {
 	 */
 	public async ask(params?: AskRequest, config?: RequestConfig): Promise<AskResponse> {
 		const queryParams = new URLSearchParams();
-		if (params?.context_type) queryParams.append('context_type', params.context_type);
-		if (params?.query) queryParams.append('query', params.query);
-		if (params?.score_ratio !== undefined)
+		if (params?.context_type) {
+			queryParams.append('context_type', params.context_type);
+		}
+		if (params?.query) {
+			queryParams.append('query', params.query);
+		}
+		if (params?.score_ratio !== undefined) {
 			queryParams.append('score_ratio', params.score_ratio.toString());
-		if (params?.max_results !== undefined)
+		}
+		if (params?.max_results !== undefined) {
 			queryParams.append('max_results', params.max_results.toString());
+		}
 
 		const endpoint = `/ask${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 

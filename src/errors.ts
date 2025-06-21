@@ -26,9 +26,15 @@ export class Crawl4AIError extends Error {
 	) {
 		super(message);
 		this.name = 'Crawl4AIError';
-		if (status !== undefined) this.status = status;
-		if (statusText !== undefined) this.statusText = statusText;
-		if (data !== undefined) this.data = data;
+		if (status !== undefined) {
+			this.status = status;
+		}
+		if (statusText !== undefined) {
+			this.statusText = statusText;
+		}
+		if (data !== undefined) {
+			this.data = data;
+		}
 	}
 }
 
@@ -71,8 +77,12 @@ export class RequestValidationError extends Crawl4AIError {
 	constructor(message: string, field?: string, value?: unknown) {
 		super(message, 400, 'Bad Request');
 		this.name = 'RequestValidationError';
-		if (field !== undefined) this.field = field;
-		if (value !== undefined) this.value = value;
+		if (field !== undefined) {
+			this.field = field;
+		}
+		if (value !== undefined) {
+			this.value = value;
+		}
 	}
 }
 
@@ -142,7 +152,9 @@ export class NotFoundError extends Crawl4AIError {
 		const message = resource ? `Resource not found: ${resource}` : 'Resource not found';
 		super(message, 404, 'Not Found');
 		this.name = 'NotFoundError';
-		if (resource) this.resource = resource;
+		if (resource) {
+			this.resource = resource;
+		}
 	}
 }
 
@@ -155,7 +167,9 @@ export class ParseError extends Crawl4AIError {
 	constructor(message: string, responseText?: string) {
 		super(message);
 		this.name = 'ParseError';
-		if (responseText) this.responseText = responseText;
+		if (responseText) {
+			this.responseText = responseText;
+		}
 	}
 }
 
