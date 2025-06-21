@@ -54,12 +54,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unclecode/crawl4ai-sdk.git"
+    "url": "git+https://github.com/pyronaur/crawl4ai.git"
   },
   "bugs": {
-    "url": "https://github.com/unclecode/crawl4ai-sdk/issues"
+    "url": "https://github.com/pyronaur/crawl4ai/issues"
   },
-  "homepage": "https://github.com/unclecode/crawl4ai-sdk#readme",
+  "homepage": "https://github.com/pyronaur/crawl4ai#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
