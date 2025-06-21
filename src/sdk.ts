@@ -14,6 +14,7 @@ import {
 import type {
 	AskRequest,
 	AskResponse,
+	ContextType,
 	Crawl4AIConfig,
 	CrawlRequest,
 	CrawlResult,
@@ -446,12 +447,17 @@ export class Crawl4AI {
 			results_count = response.all_results.length;
 		}
 
-		return {
+		const result: AskResponse = {
 			context,
 			type: context_type as ContextType,
-			query: params?.query,
 			results_count,
 		};
+
+		if (params?.query !== undefined) {
+			result.query = params.query;
+		}
+
+		return result;
 	}
 
 	/**
