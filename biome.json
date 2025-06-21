@@ -28,8 +28,8 @@
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
+    "indentStyle": "tab",
+    "indentWidth": 4,
     "lineEnding": "lf",
     "lineWidth": 100
   },
