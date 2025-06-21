@@ -70,19 +70,29 @@ export class Crawl4AI {
 	 * @param config.throwOnError - Throw on HTTP errors (default: true)
 	 */
 	constructor(config: Crawl4AIConfig) {
+		// Define defaults
+		const defaults = {
+			apiToken: '',
+			timeout: 300000, // 5 minutes
+			retries: 3,
+			retryDelay: 1000,
+			defaultHeaders: { 'Content-Type': 'application/json' },
+			throwOnError: true,
+			validateStatus: (status: number) => status < 400,
+			debug: false,
+		};
+
+		// Merge config with defaults
 		this.config = {
+			...defaults,
+			...config,
 			baseUrl: config.baseUrl.replace(/\/$/, ''), // Remove trailing slash
-			apiToken: config.apiToken || '',
-			timeout: config.timeout || 300000, // 5 minutes default
-			retries: config.retries || 3,
-			retryDelay: config.retryDelay || 1000,
 			defaultHeaders: {
-				'Content-Type': 'application/json',
+				...defaults.defaultHeaders,
 				...config.defaultHeaders,
 			},
-			throwOnError: config.throwOnError ?? true,
-			validateStatus: config.validateStatus || ((status: number) => status < 400),
-			debug: config.debug || false,
+			throwOnError: config.throwOnError ?? defaults.throwOnError,
+			validateStatus: config.validateStatus || defaults.validateStatus,
 		};
 
 		// Add authorization header if token provided
@@ -111,6 +121,38 @@ export class Crawl4AI {
 		if (this.config.debug) {
 			console.log(`[Crawl4AI] ${message}`, data || '');
 		}
+	}
+
+	/**
+	 * Normalize different API response formats to a consistent array
+	 */
+	private normalizeArrayResponse<T>(response: T | { results?: T } | { result?: T }): T {
+		if (Array.isArray(response)) {
+			return response;
+		}
+
+		const responseObj = response as { results?: T; result?: T };
+		if ('results' in responseObj && Array.isArray(responseObj.results)) {
+			return responseObj.results;
+		}
+		if ('result' in responseObj && Array.isArray(responseObj.result)) {
+			return responseObj.result;
+		}
+
+		return [response] as unknown as T;
+	}
+
+	/**
+	 * Build query parameters from an object, filtering out undefined values
+	 */
+	private buildQueryParams(params: Record<string, unknown>): string {
+		const searchParams = new URLSearchParams();
+		for (const [key, value] of Object.entries(params)) {
+			if (value !== undefined) {
+				searchParams.append(key, String(value));
+			}
+		}
+		return searchParams.toString();
 	}
 
 	// ===== Core HTTP Methods =====
@@ -276,7 +318,9 @@ export class Crawl4AI {
 	public async crawl(request: CrawlRequest, config?: RequestConfig): Promise<CrawlResult[]> {
 		// Validate URLs
 		const urls = Array.isArray(request.urls) ? request.urls : [request.urls];
-		urls.forEach((url) => this.validateUrl(url));
+		for (const url of urls) {
+			this.validateUrl(url);
+		}
 
 		// Ensure urls is always an array in the request
 		const normalizedRequest = {
@@ -295,17 +339,8 @@ export class Crawl4AI {
 			...config,
 		});
 
-		// Handle different response formats
-		if (Array.isArray(response)) {
-			return response;
-		} else if (response.results && Array.isArray(response.results)) {
-			return response.results;
-		} else if (response.result && Array.isArray(response.result)) {
-			return response.result;
-		} else {
-			// Single result wrapped in object
-			return [response as CrawlResult];
-		}
+		// Handle different response formats using utility
+		return this.normalizeArrayResponse<CrawlResult[]>(response);
 	}
 
 	/**
@@ -398,21 +433,14 @@ export class Crawl4AI {
 	 * @param params Query parameters
 	 */
 	public async ask(params?: AskRequest, config?: RequestConfig): Promise<AskResponse> {
-		const queryParams = new URLSearchParams();
-		if (params?.context_type) {
-			queryParams.append('context_type', params.context_type);
-		}
-		if (params?.query) {
-			queryParams.append('query', params.query);
-		}
-		if (params?.score_ratio !== undefined) {
-			queryParams.append('score_ratio', params.score_ratio.toString());
-		}
-		if (params?.max_results !== undefined) {
-			queryParams.append('max_results', params.max_results.toString());
-		}
+		const queryString = this.buildQueryParams({
+			context_type: params?.context_type,
+			query: params?.query,
+			score_ratio: params?.score_ratio,
+			max_results: params?.max_results,
+		});
 
-		const endpoint = `/ask${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+		const endpoint = `/ask${queryString ? `?${queryString}` : ''}`;
 
 		interface AskApiResult {
 			text: string;
@@ -430,27 +458,13 @@ export class Crawl4AI {
 			...config,
 		});
 
-		// API returns doc_results, code_results, or both based on context_type
-		// Transform to expected AskResponse format
-		const context_type = params?.context_type || 'doc';
-		let context = '';
-		let results_count = 0;
-
-		if (response.doc_results) {
-			context = response.doc_results.map((r) => r.text).join('\n\n');
-			results_count = response.doc_results.length;
-		} else if (response.code_results) {
-			context = response.code_results.map((r) => r.text).join('\n\n');
-			results_count = response.code_results.length;
-		} else if (response.all_results) {
-			context = response.all_results.map((r) => r.text).join('\n\n');
-			results_count = response.all_results.length;
-		}
+		// Get results array based on what the API returns
+		const results = response.doc_results || response.code_results || response.all_results || [];
 
 		const result: AskResponse = {
-			context,
-			type: context_type as ContextType,
-			results_count,
+			context: results.map((r) => r.text).join('\n\n'),
+			type: (params?.context_type || 'doc') as ContextType,
+			results_count: results.length,
 		};
 
 		if (params?.query !== undefined) {
