@@ -358,15 +358,15 @@ describe('Crawl4AI SDK', () => {
 			p1.catch(() => {});
 
 			// Fit filter
-			const p2 = client.markdown({ url: 'https://example.com', f: 'fit' });
+			const p2 = client.markdown({ url: 'https://example.com', filter: 'fit' });
 			expect(p2).toBeInstanceOf(Promise);
 			p2.catch(() => {});
 
 			// BM25 filter with query
 			const p3 = client.markdown({
 				url: 'https://example.com',
-				f: 'bm25',
-				q: 'search query',
+				filter: 'bm25',
+				query: 'search query',
 			});
 			expect(p3).toBeInstanceOf(Promise);
 			p3.catch(() => {});
@@ -374,8 +374,8 @@ describe('Crawl4AI SDK', () => {
 			// LLM filter with query
 			const p4 = client.markdown({
 				url: 'https://example.com',
-				f: 'llm',
-				q: 'What is this about?',
+				filter: 'llm',
+				query: 'What is this about?',
 			});
 			expect(p4).toBeInstanceOf(Promise);
 			p4.catch(() => {});
@@ -384,7 +384,7 @@ describe('Crawl4AI SDK', () => {
 		test('should accept optional cache parameter', async () => {
 			const promise = client.markdown({
 				url: 'https://example.com',
-				c: 'bypass',
+				cache: 'bypass',
 			});
 			expect(promise).toBeInstanceOf(Promise);
 			promise.catch(() => {});

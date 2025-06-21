@@ -150,9 +150,9 @@ export interface CrawlRequest {
 
 export interface MarkdownRequest {
 	url: string;
-	f?: ContentFilter;
-	q?: string;
-	c?: string;
+	filter?: ContentFilter;
+	query?: string;
+	cache?: string;
 }
 
 export interface HtmlRequest {

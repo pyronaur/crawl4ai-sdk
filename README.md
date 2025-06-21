@@ -144,8 +144,8 @@ Extract markdown with various filters:
 ```typescript
 const markdown = await client.markdown({
   url: 'https://example.com',
-  f: 'fit',  // 'raw' | 'fit' | 'bm25' | 'llm'
-  q: 'search query for bm25/llm filters'
+  filter: 'fit',  // 'raw' | 'fit' | 'bm25' | 'llm'
+  query: 'search query for bm25/llm filters'
 });
 ```
 

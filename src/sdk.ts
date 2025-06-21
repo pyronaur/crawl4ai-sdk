@@ -421,8 +421,9 @@ export class Crawl4AI {
 	 *
 	 * @param request - Markdown extraction configuration
 	 * @param request.url - URL to extract markdown from
-	 * @param request.f - Content filter: 'raw' | 'fit' | 'bm25' | 'llm'
-	 * @param request.q - Query for BM25/LLM filtering
+	 * @param request.filter - Content filter: 'raw' | 'fit' | 'bm25' | 'llm'
+	 * @param request.query - Query for BM25/LLM filtering
+	 * @param request.cache - Cache mode (e.g., 'bypass')
 	 * @param config - Optional request configuration
 	 * @returns Promise resolving to markdown string
 	 *
@@ -430,7 +431,7 @@ export class Crawl4AI {
 	 * ```typescript
 	 * const markdown = await client.markdown({
 	 *   url: 'https://example.com',
-	 *   f: 'fit'
+	 *   filter: 'fit'
 	 * });
 	 * ```
 	 */
@@ -440,9 +441,17 @@ export class Crawl4AI {
 			markdown: string;
 		}
 
+		// Map descriptive property names to API's expected format
+		const apiRequest = {
+			url: request.url,
+			...(request.filter !== undefined && { f: request.filter }),
+			...(request.query !== undefined && { q: request.query }),
+			...(request.cache !== undefined && { c: request.cache }),
+		};
+
 		const response = await this.requestWithRetry<string | MarkdownApiResponse>('/md', {
 			method: 'POST',
-			body: JSON.stringify(request),
+			body: JSON.stringify(apiRequest),
 			...config,
 		});
 		// API returns object with markdown property
